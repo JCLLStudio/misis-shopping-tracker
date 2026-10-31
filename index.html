@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="tl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#be185d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="assets/icon.svg">
+<link rel="apple-touch-icon" href="assets/icon.svg">
+<title>Misis' Shopping Tracker</title>
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="app">
+
+<header>
+<div class="logo">🛍️</div>
+<h1>Misis' Shopping Tracker</h1>
+<p>Wallet • Shopping • Library • Inventory • Notes</p>
+<div class="version">VERSION <span id="ver">2.0.0</span> • OFFLINE</div>
+</header>
+
+<nav class="tabs">
+<button class="tab active" onclick="showPage('walletPage',this)">👛 Wallet</button>
+<button class="tab" onclick="showPage('shoppingPage',this)">🛒 Shop</button>
+<button class="tab" onclick="showPage('libraryPage',this)">📖 Library</button>
+<button class="tab" onclick="showPage('stockPage',this)">📦 Stock</button>
+<button class="tab" onclick="showPage('notesPage',this)">📝 Notes</button>
+<button class="tab" onclick="showPage('calculatorPage',this)">🧮 Calc</button>
+<button class="tab" onclick="showPage('historyPage',this)">📚 History</button>
+</nav>
+
+<!-- WALLET -->
+<section id="walletPage" class="page active">
+
+<div id="backupBanner" class="status warning" style="display:none;margin:0 0 14px">
+⚠ Matagal nang walang backup. Para hindi mawala ang library at larawan mo, mag-backup.
+<button class="btn primary full" onclick="exportData()">⬇ Mag-backup ngayon</button>
+</div>
+
+<div class="wallet-card">
+<small>MY VIRTUAL WALLET • PHP</small>
+<div class="wallet-balance" id="walletBalance">₱0.00</div>
+<small>Current wallet balance</small>
+
+<div class="wallet-actions">
+<button class="wallet-action" onclick="openTransaction('in')">
+＋ CASH IN
+</button>
+<button class="wallet-action" onclick="openTransaction('out')">
+− CASH OUT
+</button>
+</div>
+</div>
+
+<div class="card">
+<div class="section-title">💰 WALLET OVERVIEW</div>
+<div class="wallet-stats">
+<div class="wallet-stat">
+<small>Total Cash In</small>
+<strong id="totalIn">₱0.00</strong>
+</div>
+<div class="wallet-stat">
+<small>Total Cash Out</small>
+<strong id="totalOut">₱0.00</strong>
+</div>
+<div class="wallet-stat">
+<small>Shopping Expenses</small>
+<strong id="totalShopping">₱0.00</strong>
+</div>
+<div class="wallet-stat">
+<small>Other Expenses</small>
+<strong id="totalOther">₱0.00</strong>
+</div>
+</div>
+</div>
+
+<div class="card">
+<div class="section-title">📌 WALLET BALANCE DETAILS</div>
+<div class="summary-line"><span>Current Wallet Balance</span><strong id="walletDetail">₱0.00</strong></div>
+<div class="summary-line"><span>Reserved Shopping Budget</span><strong id="reservedDisplay">₱0.00</strong></div>
+<div class="summary-line"><span>Available to Use</span><strong class="highlight" id="availableDisplay">₱0.00</strong></div>
+<div id="walletStatus" class="status warning">Mag-Cash In muna para magkaroon ng funds.</div>
+</div>
+
+<div class="card">
+<div class="section-title">🛒 SHOPPING ALLOCATION</div>
+<p style="font-size:12px;color:#907987;line-height:1.6">
+Maglaan ng bahagi ng wallet para sa shopping. Ang allocation ay reserve lamang at hindi pa expense.
+</p>
+<label>Shopping budget / allocation (₱)</label>
+<input id="allocation" type="number" min="0" step=".01" value="0" oninput="updateAll()">
+<div class="summary-line"><span>Available before allocation</span><strong id="beforeAllocation">₱0.00</strong></div>
+<div class="summary-line"><span>Reserved amount</span><strong id="allocationDisplay">₱0.00</strong></div>
+<div class="summary-line"><span>Available after allocation</span><strong id="afterAllocation">₱0.00</strong></div>
+<div id="allocationStatus" class="status warning">Wala pang allocated shopping budget.</div>
+<button class="btn primary full" onclick="applyAllocation()">✓ Apply Shopping Allocation</button>
+<button class="btn secondary full" onclick="releaseAllocation()">Release Allocation</button>
+</div>
+
+<div class="card">
+<div class="section-title">📜 RECENT WALLET TRANSACTIONS</div>
+<div id="walletTransactions"></div>
+</div>
+
+<div class="card">
+<div class="section-title">💵 CASH COUNT (PHYSICAL CASH)</div>
+<div id="denominations"></div>
+<div class="summary-line"><span>Physical cash total</span><strong id="denomTotal">₱0.00</strong></div>
+<div class="summary-line"><span>Wallet balance</span><strong id="denomExpected">₱0.00</strong></div>
+<div id="denomStatus" class="status warning"></div>
+</div>
+
+</section>
+
+<!-- SHOPPING -->
+<section id="shoppingPage" class="page">
+
+<div class="card">
+<div class="section-title">💝 SHOPPING BUDGET</div>
+<div class="budget-display">
+<small>ALLOCATED SHOPPING BUDGET</small>
+<div class="big-money" id="shoppingBudgetDisplay">₱0.00</div>
+<small>Reserved from your wallet</small>
+</div>
+<div class="summary-line"><span>Actual expenses</span><strong id="shoppingExpense">₱0.00</strong></div>
+<div class="summary-line"><span>Unused allocation</span><strong id="unusedAllocation">₱0.00</strong></div>
+<p style="font-size:11px;color:#999">Baguhin ang allocation sa Wallet tab.</p>
+</div>
+
+<div class="card">
+<div class="section-title">🔎 HANAPIN SA LIBRARY</div>
+<input id="shopSearch" type="search" placeholder="Hanapin ang item na bibilhin…" oninput="Lib.shopSearch()">
+<div id="shopResults"></div>
+<div id="restockHint"></div>
+</div>
+
+<div class="card">
+<div class="section-title">📋 SHOPPING CHECKLIST</div>
+<div id="itemsList"></div>
+<button class="btn secondary full" onclick="addItem()">＋ Add New Item</button>
+<div class="row">
+<button class="btn secondary full" onclick="saveTemplate()">💾 Save List</button>
+<button class="btn secondary full" onclick="openTemplates()">📂 Load List</button>
+</div>
+</div>
+
+<div class="card" id="templatesBox" style="display:none">
+<div class="section-title">📂 SAVED SHOPPING LISTS</div>
+<div id="templatesList"></div>
+</div>
+
+<div class="card">
+<div class="section-title">⭐ SAVED ITEMS</div>
+<div id="favoritesList"></div>
+</div>
+
+<div class="card">
+<div class="section-title">📊 SHOPPING PROGRESS</div>
+<div class="summary-line"><span>Items purchased</span><strong id="progress">0 / 0</strong></div>
+<div class="progress-bg"><div class="progress-fill" id="progressBar" style="width:0%"></div></div>
+</div>
+
+<div class="card">
+<div class="section-title">🧾 SHOPPING TOTAL</div>
+<div class="summary-line"><span>Total expenses</span><strong id="shoppingTotal">₱0.00</strong></div>
+<div class="summary-line"><span>Remaining allocation</span><strong id="shoppingBalance">₱0.00</strong></div>
+<label style="margin-top:14px">🏪 Saan binili? (tindahan)</label>
+<input id="tripStore" list="storeList" placeholder="hal. Puregold">
+<datalist id="storeList"></datalist>
+<label>Cash na iniabot (₱)</label>
+<input id="cashGiven" type="number" min="0" step=".01" placeholder="0.00" oninput="updateAll()">
+<label>Aktuwal na sukli (₱)</label>
+<input id="actualChange" type="number" min="0" step=".01" placeholder="0.00" oninput="updateAll()">
+<div class="summary-line" style="margin-top:8px"><span>Cash given</span><strong id="cashDisplay">₱0.00</strong></div>
+<div class="summary-line"><span>Expected change</span><strong id="expectedChange">₱0.00</strong></div>
+<div class="summary-line"><span>Actual change</span><strong id="actualDisplay">—</strong></div>
+<div class="summary-line"><span>Difference</span><strong id="difference">—</strong></div>
+<div id="verification" class="status warning"></div>
+<button class="btn primary full" onclick="saveTrip()">✓ Complete & Save Shopping</button>
+</div>
+
+</section>
+
+<!-- LIBRARY -->
+<section id="libraryPage" class="page">
+<div class="card">
+<div class="section-title">📖 ITEM LIBRARY <span id="libCount"></span></div>
+<input id="libSearch" type="search" placeholder="Hanapin ang item…" oninput="Lib.render()">
+<div class="row" style="margin-top:9px">
+<select id="libCat" onchange="Lib.render()"></select>
+<button class="btn primary" onclick="Lib.edit()">＋ Bagong Item</button>
+</div>
+</div>
+<div id="libList"></div>
+<div class="card">
+<div class="section-title">🔁 IMPORT / EXPORT LIBRARY</div>
+<p style="font-size:12px;color:#907987;line-height:1.6">Para sa paglipat sa ibang phone. Kasama ang mga larawan, stock, at tindahan.</p>
+<button class="btn secondary full" onclick="exportLib()">⬇ Export Library</button>
+<label style="margin-top:14px">Import Library</label>
+<input type="file" accept=".json,application/json" onchange="importLib(event)">
+</div>
+</section>
+
+<!-- STOCK -->
+<section id="stockPage" class="page">
+<div class="card">
+<div class="section-title">📦 INVENTORY</div>
+<div id="stockSummary" class="wallet-stats"></div>
+<select id="stockFilter" onchange="Stock.render()" style="margin-top:12px">
+<option value="all">Lahat ng tracked items</option>
+<option value="need">Kailangan nang bilhin</option>
+</select>
+<button class="btn primary full" onclick="Stock.restockAll()">🛒 Idagdag ang lahat ng Restock sa Shop</button>
+</div>
+<div id="stockList"></div>
+</section>
+
+<!-- NOTES -->
+<section id="notesPage" class="page">
+<div class="card">
+<div class="section-title">📝 NOTES / JOURNAL</div>
+<input id="noteTitle" placeholder="Pamagat (optional)">
+<textarea id="noteText" rows="4" placeholder="Isulat dito habang namimili o naghihintay kay Misis…"></textarea>
+<label class="chk"><input type="checkbox" id="notePin"> 📌 I-pin sa itaas</label>
+<button class="btn primary full" onclick="Notes.add()">＋ I-save ang Note</button>
+</div>
+<input id="noteSearch" type="search" placeholder="Hanapin sa notes…" oninput="Notes.render()" style="margin-bottom:14px">
+<div id="notesList"></div>
+</section>
+
+<!-- CALCULATOR -->
+<section id="calculatorPage" class="page">
+<div class="card">
+<div class="section-title">🧮 QUICK CALCULATOR</div>
+<div class="calc-display">
+<div class="calc-expression" id="calcExpression"></div>
+<div class="calc-result" id="calcDisplay">0</div>
+</div>
+<div class="calc-grid">
+<button class="calc-key special" onclick="calcClear()">C</button>
+<button class="calc-key special" onclick="calcBack()">⌫</button>
+<button class="calc-key special" onclick="calcPercent()">%</button>
+<button class="calc-key operator" onclick="calcOperator('/')">÷</button>
+<button class="calc-key" onclick="calcDigit('7')">7</button>
+<button class="calc-key" onclick="calcDigit('8')">8</button>
+<button class="calc-key" onclick="calcDigit('9')">9</button>
+<button class="calc-key operator" onclick="calcOperator('*')">×</button>
+<button class="calc-key" onclick="calcDigit('4')">4</button>
+<button class="calc-key" onclick="calcDigit('5')">5</button>
+<button class="calc-key" onclick="calcDigit('6')">6</button>
+<button class="calc-key operator" onclick="calcOperator('-')">−</button>
+<button class="calc-key" onclick="calcDigit('1')">1</button>
+<button class="calc-key" onclick="calcDigit('2')">2</button>
+<button class="calc-key" onclick="calcDigit('3')">3</button>
+<button class="calc-key operator" onclick="calcOperator('+')">+</button>
+<button class="calc-key special" onclick="calcSign()">±</button>
+<button class="calc-key" onclick="calcDigit('0')">0</button>
+<button class="calc-key" onclick="calcDecimal()">.</button>
+<button class="calc-key operator" onclick="calcEquals()">=</button>
+</div>
+<button class="btn secondary full" onclick="calcUseBudget()">Use Result as Shopping Allocation</button>
+<button class="btn secondary full" onclick="calcUseCash()">Use Result as Cash In Amount</button>
+</div>
+</section>
+
+<!-- HISTORY -->
+<section id="historyPage" class="page">
+
+<div class="card">
+<div class="section-title">📚 TRANSACTION HISTORY</div>
+<div id="historyList"></div>
+</div>
+
+<div class="card">
+<div class="section-title">🏷️ PRICE MEMORY</div>
+<div id="priceHistory"></div>
+</div>
+
+<div class="card">
+<div class="section-title">📅 MONTHLY EXPENSES</div>
+<div id="monthlyHistory"></div>
+</div>
+
+<div class="card">
+<div class="section-title">💾 BACKUP & RESTORE</div>
+<button class="btn secondary full" onclick="exportData()">⬇ Export JSON Backup</button>
+<button class="btn secondary full" onclick="exportCSV()">📊 Export CSV</button>
+<label style="margin-top:15px">Restore Backup</label>
+<input type="file" accept=".json,application/json" onchange="importData(event)">
+</div>
+
+</section>
+
+<!-- CASH IN / OUT MODAL -->
+<div id="transactionModal" style="display:none;position:fixed;inset:0;background:#0008;z-index:20;align-items:center;justify-content:center;padding:18px">
+<div class="card" style="width:100%;max-width:420px;margin:0">
+<div class="section-title" id="modalTitle">CASH IN</div>
+<label>Amount (₱)</label>
+<input id="transactionAmount" type="number" min=".01" step=".01" placeholder="Enter amount">
+<div style="height:12px"></div>
+<label>Category</label>
+<select id="transactionCategory">
+<option>Money from Misis</option>
+<option>Personal Funds</option>
+<option>Allowance</option>
+<option>Returned Money</option>
+<option>Other</option>
+</select>
+<div style="height:12px"></div>
+<label>Description / Remarks</label>
+<input id="transactionNote" placeholder="Optional notes">
+<div style="height:12px"></div>
+<div id="modalWarning" style="font-size:12px;color:#999"></div>
+<div class="row">
+<button class="btn secondary full" onclick="closeTransaction()">Cancel</button>
+<button class="btn primary full" onclick="submitTransaction()">Confirm</button>
+</div>
+</div>
+</div>
+
+<!-- LIBRARY ITEM EDITOR -->
+<div id="libModal" class="modal" style="display:none"></div>
+
+<!-- RECEIPT -->
+<section id="receiptPrint" style="display:none">
+<div class="receipt">
+<h3>❤️ MISIS' SHOPPING RECEIPT</h3>
+<p style="text-align:center;font-size:11px">Household Shopping Record</p>
+<p id="receiptDate" style="font-size:11px"></p>
+<div id="receiptItems"></div>
+<hr>
+<div class="receipt-row"><strong>Shopping Allocation</strong><strong id="rBudget"></strong></div>
+<div class="receipt-row"><strong>Total Expenses</strong><strong id="rTotal"></strong></div>
+<div class="receipt-row"><strong>Unused Allocation</strong><strong id="rUnused"></strong></div>
+<div class="receipt-row"><strong>Wallet Before Shopping</strong><strong id="rBefore"></strong></div>
+<div class="receipt-row"><strong>Wallet After Shopping</strong><strong id="rAfter"></strong></div>
+<div class="receipt-row"><strong>Cash Tendered</strong><strong id="rCash"></strong></div>
+<div class="receipt-row"><strong>Actual Change</strong><strong id="rChange"></strong></div>
+<p id="rStatus" style="text-align:center;font-size:12px;margin-top:20px"></p>
+<p style="text-align:center;font-size:12px">Salamat, Misis! ❤️</p>
+</div>
+</section>
+
+<footer>
+Misis' Shopping Tracker v2<br>
+Offline • Data stays on this phone<br>Made with love ❤️
+</footer>
+</div>
+<script src="js/util.js"></script>
+<script src="js/core.js"></script>
+<script src="js/lib.js"></script>
+<script src="js/stock.js"></script>
+<script src="js/notes.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
